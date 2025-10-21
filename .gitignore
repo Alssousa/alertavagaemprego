@@ -12,6 +12,7 @@ venv/
 env/
 .env/
 
+
 # Distribution / packaging
 dist/
 build/
@@ -48,3 +49,6 @@ htmlcov/
 # Selenium/WebDriver logs
 geckodriver.log
 chromedriver.log
+
+# Others
+.env
