@@ -8,16 +8,32 @@ from time import sleep
 
 vagas = []
 
-def startup():   
+def startup(city:str):   
     try:
         driver = webdriver.Firefox()
-        driver.get('https://www.infojobs.com.br/empregos.aspx?poblacion=5204517')
+        driver.get('https://www.infojobs.com.br/empregos.aspx')
     except Exception as e:
         print("Erro ao iniciar o navegador ou acessar o site:", e)
         raise e
     sleep(2)
     cookies_btn = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, 'didomi-notice-agree-button')))
     cookies_btn.click()
+    try:
+        input_city = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, 'city')))
+        input_city.clear()
+        input_city.send_keys(city)
+    except Exception as e:
+        print("Erro ao localizar o campo de cidade:", e)
+        raise e
+    try:
+        element_city_option = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, 'autocomplete-suggestion')))
+        element_city_option.click()
+    except Exception as e:
+        print("Erro ao selecionar a cidade sugerida:", e)
+        raise e
+    btn_search = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, 'btn-d-block')))
+    btn_search.click()
+    sleep(2)
     
     return BeautifulSoup(driver.page_source, 'html.parser'), driver
     
@@ -63,10 +79,7 @@ def new_job():
             ################ AÇÃO DE ALERTA PARA NOVA VAGA AQUI ################
 
     
-    
-    
-    
-# teste 
-'''html_homepage, driver = startup()
-vagas = list_jobs(html_homepage, driver)
-new_job()'''
+
+
+# teste
+startup('imperatriz')
