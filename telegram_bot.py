@@ -2,6 +2,7 @@ import telebot
 import os
 from dotenv import load_dotenv
 import json
+from web_scraper import logger
 
 load_dotenv()
 TELEGRAM_TOOKEN = os.getenv('TELEGRAM_TOKEN')
@@ -47,5 +48,20 @@ def process_city(message):
     bot.reply_to(message, f"A cidade {city} foi adicionada em sua lista de preferências. Aguarde para novas notificações :)")
     
 
-def send_alert_new_job():
-    pass
+def send_alert_new_job(user_id, job_info: dict):
+    try:
+        chat_id = int(user_id)
+        text = (
+            f"Uma nova oportunidade de emprego foi encontrada!\n\n"
+            f"Vaga: {job_info.get('job', '-')}\n"
+            f"Empresa: {job_info.get('empresa', '-')}\n"
+            f"Modalidade: {job_info.get('modalidade', '-')}\n"
+            f"Local: {job_info.get('local', '-')}\n"
+            f"Feedback: {job_info.get('feedback', '-')}\n"
+            f"Link: {job_info.get('link', '-')}\n\n"
+            "Acesse o site para mais informações."
+        )
+        logger.info("Enviando mensagem para %s -> %s - %s", chat_id, job_info.get('empresa'), job_info.get('job'))
+        bot.send_message(chat_id, text)
+    except Exception as e:
+        logger.exception("Falha ao enviar alerta para %s: %s", user_id, e)
