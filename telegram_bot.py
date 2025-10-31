@@ -58,7 +58,7 @@ def process_city(message):
         save_user_data(data)
         bot.reply_to(message, f"A cidade {city} foi adicionada em sua lista de preferências. Aguarde para novas notificações :)")
     
-@bot.message_handler(commands=['cidades_cadastrada'])
+@bot.message_handler(commands=['cidades_cadastradas'])
 def my_citys(message):
     user_id = message.from_user.id
     if user_id:
@@ -76,6 +76,49 @@ def my_citys(message):
         except Exception as e:
             logger.exception("Ocorreu um erro ao carregar dados do usuario. Err-:%s", e)
             bot.send_message(user_id, "Por favor, tente mais tarde. Estamos com um pequeno problema no servidor.")
+            
+@bot.message_handler(commands=['remover'])
+def remove_city(message):
+    user_id = message.from_user.id
+    print("FUNÇÃO REMOVER ACESSADA")
+    if message.text.lower().startswith('/'):
+        print("DENTRO DO COMANDO /")
+        try:
+            data = load_user_date()
+            user_citys = data[str(user_id)].get('city', {})
+            print('carregando dados do usuario: ', user_citys)
+            if user_citys:
+                citys_formated = '\n'.join([item for item in user_citys])
+                print("O PROBLEMA É NA FORMATAÇÃO? ", citys_formated)
+                text = (
+                    f'Para remover uma cidade de sua lista, digite o nome da mesma conforme mostrado representado abaixo:\n'
+                    f'{citys_formated}'
+                )
+                bot.send_message(user_id, text)
+                bot.register_next_step_handler(message, remove_city)
+        except Exception as e:
+            logger.exception('Erro ao enviar as possíveis cidades a serem removidas. e-> %s', e)
+    else:
+        logger.info("Acessando escopo de remoção de cidades")
+        try:
+            data = load_user_date()
+            user_citys = data[str(user_id)].get('city', {})
+            print("User_Citys: ", user_citys)
+            if user_citys:
+                print("Tipo variavel -> ", type(user_citys))
+                if message.text in user_citys:
+                    print(f"{message.text} está na lista de cidades.")
+                    user_citys.remove(message.text)
+                    data[str(user_id)]['city'] = user_citys
+                    save_user_data(data)
+                    print(f'cidade {message.text} foi removida com sucesso')
+                    bot.reply_to(message, f"A cidade {message.text} foi removida. Você não receberá mais notificações de oportunidades dessa cidade.")
+                else:
+                    bot.reply_to(message, "A cidade que você forneceu não está correta.\n\nTente novamente inserindo o nome da cidade corretamente:")
+                    bot.register_next_step_handler(message, remove_city)
+                    
+        except Exception as e:
+            logger.exception('Erro ao remover a cidade %s, err.%s', message.text, e)
 
 def send_alert_new_job(user_id, job_info: dict):
     try:
@@ -94,3 +137,12 @@ def send_alert_new_job(user_id, job_info: dict):
         bot.send_message(chat_id, text)
     except Exception as e:
         logger.exception("Falha ao enviar alerta para %s: %s", user_id, e)
+        
+
+@bot.message_handler(func=lambda message: True)
+def help(message):
+    text = (
+        f'Comando não identificado. Para acessar as funções, clique sobre os comandos ou digte-os:\n\n'
+        f'/adicionar ->\n/remover ->\n/cidades_cadastradas ->\n'
+    )
+    bot.reply_to(message, text)
