@@ -35,7 +35,7 @@ def scraper_loop():
 
 if __name__ == "__main__":
     t = threading.Thread(target=scraper_loop, daemon=True)
-    #t.start()
+    t.start()
     
     bot.infinity_polling()
     
