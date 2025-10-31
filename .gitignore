@@ -52,4 +52,4 @@ chromedriver.log
 
 # Others
 .env
-.json
+*.json
