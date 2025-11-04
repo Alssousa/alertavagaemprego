@@ -39,6 +39,12 @@ def startup(driver, city:str):
         logger.info("Aceitando cookies")
         cookies_btn = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, 'didomi-notice-agree-button')))
         cookies_btn.click()
+        try:
+            logger.info("Verificando e fechando o pop-up do google.")
+            close_pop_up = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, 'close')))
+            close_pop_up.click()    
+        except Exception as e:
+            logger.info("Pop-up não encontrado")
         input_city = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, 'city')))
         input_city.clear()
         input_city.send_keys(city)
@@ -48,7 +54,11 @@ def startup(driver, city:str):
         btn_search = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, 'btn-d-block')))
         logger.info("Procurando vagas.")
         btn_search.click()
-        
+        '''if first_data:
+            logger.info("Scrollando para obter mais dados.")
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            sleep(10)'''
+            
         return BeautifulSoup(driver.page_source, 'html.parser')
     except Exception as e:
         logger.exception("Erro no startup do driver para cidade %s: %s", city, e)
@@ -62,7 +72,7 @@ def list_jobs(city:str):
         tries += 1
         try:
             options = FirefoxOptions()
-            options.headless = 'eager'
+            options.add_argument('-headless')
             logger.info("Iniciando o webdriver para a tentativa %d.", tries)
             driver = webdriver.Firefox(options=options)
             driver.set_page_load_timeout(120)
@@ -75,6 +85,7 @@ def list_jobs(city:str):
                 return []    
             logger.info("Analisando scraper...")         
             cards = content.select('div.js_rowCard')
+            logger.info("Quantidade de vagas: %d", len(cards))
             for itens in cards:
                 # extrair id/link de forma segura
                 link_el = itens.select_one('div.js_cardLink')
@@ -166,7 +177,7 @@ def new_job(city:str):
                 vagas.append(new_vaga)
         
         if vagas:
-            #save_city_data(data)
+            save_city_data(data)
             logger.info("Novas vagas encontradas, retornando ->")
             return vagas
         logger.info("Nenhuma nova vaga encontrada, retornando ->")
